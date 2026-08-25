@@ -133,6 +133,16 @@
 
   .notes{margin-top:20px;display:flex;flex-direction:column;gap:8px}
 
+  /* ---------- pickup / handoff bar ---------- */
+  .pickup{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:24px;
+    background:var(--amber-l);border:1px solid var(--amber);border-radius:12px;padding:20px 24px}
+  .pickup-txt{display:flex;flex-direction:column;gap:5px}
+  .pickup-txt .eyebrow{color:var(--amber-d)}
+  .pickup-txt span:last-child{font-size:14.5px;color:var(--ink-2);line-height:1.5}
+  .btn-pickup{background:#fff;color:var(--ink);border-color:#E4C998;flex:0 0 auto;white-space:nowrap}
+  .btn-pickup:hover{background:var(--panel);border-color:var(--amber-d)}
+  .btn-pickup:focus-visible{outline:2px solid var(--amber-d);outline-offset:2px}
+
   /* ---------- progress ---------- */
   .tracker{position:sticky;top:0;z-index:20;background:rgba(249,252,255,.94);
     backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
@@ -263,14 +273,22 @@
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
             <span class="eyebrow">Who should fill this in</span>
-            <span style="font-size:15px;color:var(--ink-2)">Whoever has the clearest end-to-end view of your build and release pipeline — often a platform, DevOps or application security lead. Collaborating with a colleague is fine and usually better.</span>
+            <span style="font-size:15px;color:var(--ink-2)">Whoever has the clearest end-to-end view of your build and release pipeline — often a platform, DevOps or application security lead. If parts of it belong to someone else, you can answer what you know and hand the rest over: use <b>Download / hand off</b> at the end to pass a file to a colleague.</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
             <span class="eyebrow">Nothing is submitted automatically</span>
-            <span style="font-size:15px;color:var(--ink-2)">Your answers stay in this browser tab until you choose to copy or download them at the end.</span>
+            <span style="font-size:15px;color:var(--ink-2)">Your answers stay in this browser tab until you choose to copy or download them at the end. The downloaded file is also how you save — nothing is stored on this page once it's closed.</span>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="pickup no-print">
+      <div class="pickup-txt">
+        <span class="eyebrow">Continuing someone else's draft?</span>
+        <span>If a colleague started this and sent you their file, load it here first — otherwise you'll be starting from scratch.</span>
+      </div>
+      <button class="btn btn-pickup" id="b-resume-top">Load a saved file</button>
     </div>
   </div>
 </section>
@@ -292,11 +310,11 @@
           <input type="text" id="f-date" data-meta="Date completed" placeholder="e.g. 24 August 2026">
         </div>
         <div class="field">
-          <label class="lab" for="f-name">Your name</label>
-          <input type="text" id="f-name" data-meta="Completed by" placeholder="Name">
+          <label class="lab" for="f-name">Completed by</label>
+          <input type="text" id="f-name" data-meta="Completed by" placeholder="Your name — add colleagues if several of you contributed">
         </div>
         <div class="field">
-          <label class="lab" for="f-role">Your role</label>
+          <label class="lab" for="f-role">Role</label>
           <input type="text" id="f-role" data-meta="Role" placeholder="e.g. Platform Engineering Lead">
         </div>
       </div>
@@ -403,7 +421,7 @@
     <p style="font-size:16px;margin-top:16px;max-width:80ch">Your answers have not left this tab. Use either option below, then send the result to your Cloudsmith contact.</p>
 
     <div class="steps">
-      <div class="step"><span class="n">01</span><span class="t">Copy your answers to the clipboard and paste them into an email, or download them as a file and attach it.</span></div>
+      <div class="step"><span class="n">01</span><span class="t">Once everyone has contributed, copy the answers into an email or attach the downloaded file.</span></div>
       <div class="step"><span class="n">02</span><span class="t">We score the nine domains and produce your maturity scorecard.</span></div>
       <div class="step"><span class="n">03</span><span class="t">You receive a findings and roadmap document: strengths, the three highest-priority gaps with the controls they map to, and a phased 12-month plan.</span></div>
       <div class="step"><span class="n">04</span><span class="t">We walk through it together and agree what the first quarter looks like.</span></div>
@@ -413,10 +431,12 @@
 
     <div class="actions">
       <button class="btn btn-primary" id="b-copy">Copy answers</button>
-      <button class="btn btn-ghost" id="b-download">Download as file</button>
+      <button class="btn btn-ghost" id="b-download">Download / hand off</button>
       <button class="btn btn-ghost" id="b-print">Save as PDF</button>
+      <button class="btn btn-ghost" id="b-resume">Load a saved file</button>
+      <input type="file" id="f-file" accept=".json,application/json" style="display:none">
     </div>
-    <p style="font-size:14px;margin-top:18px;color:var(--on-navy-3)">This form doesn't save your progress as you go — plan for the full 20–30 minutes in one sitting, or you'll need to start over.</p>
+    <p style="font-size:14px;margin-top:18px;color:var(--on-navy-3)">Need a colleague to answer part of this? <b>Download / hand off</b> saves everything entered so far to a file. Send them that file, they open this same page, click <b>Load a saved file</b>, and carry on from where you stopped. Repeat as often as you need — only the last person sends the file back to us. Closing the tab without downloading loses the answers.</p>
   </div>
 </section>
 
@@ -816,6 +836,77 @@ document.getElementById('b-download').addEventListener('click',function(){
 
 document.getElementById('b-print').addEventListener('click',function(){ window.print(); });
 
+/* ---------- load a saved / handed-off file ---------- */
+function hasAnswers(){
+  if(Object.keys(state.meta).some(function(k){return state.meta[k];})) return true;
+  if(state.frameworks.length) return true;
+  return DOMAINS.some(function(d){
+    var s=state.domains[d.id];
+    return s && (s.level || s.notes || (s.caps && Object.keys(s.caps).length));
+  });
+}
+function openLoader(){
+  if(hasAnswers() && !confirm('Loading a file will replace everything currently entered on this page. Continue?')) return;
+  document.getElementById('f-file').click();
+}
+document.getElementById('b-resume').addEventListener('click',openLoader);
+document.getElementById('b-resume-top').addEventListener('click',openLoader);
+
+document.getElementById('f-file').addEventListener('change',function(e){
+  var f=e.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var data=JSON.parse(r.result);
+      if(!data || data.kind!=='cloudsmith-supply-chain-self-assessment'){
+        toast('That does not look like a saved assessment file'); return;
+      }
+      state.meta=data.meta||{}; state.frameworks=data.frameworks||[]; state.domains=data.domains||{};
+
+      document.querySelectorAll('[data-meta]').forEach(function(inp){
+        inp.value = (state.meta[inp.dataset.meta]!==undefined) ? state.meta[inp.dataset.meta] : '';
+        inp.dispatchEvent(new Event('input',{bubbles:false}));
+      });
+      document.querySelectorAll('#fw input').forEach(function(cb){
+        cb.checked = state.frameworks.indexOf(cb.value)>=0;
+      });
+
+      DOMAINS.forEach(function(d){
+        var s=state.domains[d.id]||{};
+        var art=document.getElementById('d-'+d.id);
+
+        document.querySelectorAll('input[name="'+d.id+'"]').forEach(function(r0){ r0.checked=false; });
+        art.classList.remove('done');
+        if(s.level){
+          var val = s.level==='Not sure' ? 'unsure' : String(LEVELS.indexOf(s.level));
+          var r2=document.querySelector('input[name="'+d.id+'"][value="'+val+'"]');
+          if(r2){ r2.checked=true; art.classList.add('done'); }
+        }
+
+        d.caps.forEach(function(_,i){
+          document.querySelectorAll('input[name="cap-'+d.id+'-'+i+'"]').forEach(function(r3){ r3.checked=false; });
+        });
+        if(s.caps){
+          Object.keys(s.caps).forEach(function(k){
+            var r4=document.querySelector('input[name="cap-'+d.id+'-'+k+'"][value="'+s.caps[k]+'"]');
+            if(r4) r4.checked=true;
+          });
+        }
+        capCount(d);
+
+        var ta=document.getElementById('n-'+d.id);
+        ta.value = s.notes || '';
+        document.getElementById('p-'+d.id).textContent = s.notes || '';
+      });
+
+      progress();
+      toast('Answers loaded — carry on where they left off');
+      document.getElementById('domains').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){ toast('Could not read that file'); }
+  };
+  r.readAsText(f);
+  e.target.value='';
+});
 </script>
 </body>
 </html>
