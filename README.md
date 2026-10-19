@@ -52,7 +52,7 @@ completed in one sitting (20–30 minutes).
 |---|---|
 | **Copy answers** | Copies a tab-separated block to the clipboard, to paste into an email |
 | **Download as file** | Downloads a `.json` file to attach to a reply — the most reliable option |
-| **Save as PDF** | Opens the browser print dialog for a clean record of their answers |
+| **Save as PDF** | Opens the browser print dialog. The print layout is its own design: a cover page (masthead, context, frameworks), one page per domain with only the chosen answers, then priorities and a compact answer key for intake. The page margin is set to zero so Chrome and Edge drop their URL/date header and footer automatically; in other browsers, untick "Headers and footers" in the dialog |
 
 ---
 

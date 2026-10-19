@@ -51,7 +51,7 @@
   /* ---------- fields ---------- */
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   .field{display:flex;flex-direction:column;gap:8px}
-  label.lab{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .lab{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
   input[type=text],textarea,select{
     font-family:var(--font-body);font-size:15px;color:var(--ink);background:#fff;
     border:1px solid var(--border);border-radius:8px;padding:11px 14px;width:100%;line-height:1.5}
@@ -205,24 +205,94 @@
 
   /* ---------- print ---------- */
   @media print{
-    :root{--pad:0}
-    body{background:#fff;font-size:11pt}
-    .tracker,.actions,.warn,.toast,.no-print{display:none!important}
-    .masthead{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .send{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .domain,.card{break-inside:avoid;page-break-inside:avoid;border:1px solid #ccc}
-    .caps{background:#fff;border:1px solid #ddd}
-    .seg{border:none;background:none}
-    .seg label:not(:has(input:checked)){display:none}
-    .seg .s{border:1px solid #999;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .cap-row:not(:has(input:checked)) .seg::after{content:"not answered";font-family:var(--font-mono);font-size:9pt;color:#999}
-    .lvl:not(:has(input:checked)){display:none}
-    .ladder{grid-template-columns:1fr}
-    textarea{display:none}
-    .print-only{display:block;font-size:11pt;color:var(--ink-2);white-space:pre-wrap;
-      border-left:2px solid var(--amber);padding-left:12px;min-height:8pt}
+    /* Zero page margin suppresses the browser's own header/footer (URL, date, page
+       numbers). Every page-level block therefore carries its own padding instead. */
+    @page{margin:0}
+    :root{--pad:16mm}
+    html,body{background:#fff}
+    body{font-size:10.5pt;line-height:1.4;color:var(--ink)}
+    .wrap{max-width:none}
+    .tracker,.actions,.warn,.toast,.no-print,.intro,.send,.screen-only,.hint{display:none!important}
+    .print-only{display:block}
+    .masthead,.send,.seg .s,.lvl,.pips i,.chip,.box{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+    /* ---- page 1: cover = masthead + A + B ---- */
+    .masthead{padding:14mm 0 11mm;background:var(--navy)!important;break-after:avoid}
+    .masthead svg{height:7mm}
+    .spacer-56{height:9mm}
+    .masthead h1{font-size:26pt}
+    .masthead .sub{font-size:10.5pt;margin-top:3.5mm;max-width:none}
+    .section{padding-top:7mm}
+    .card{border:none;border-radius:0;padding:0;background:none}
+    .sec-head{gap:4mm;margin-bottom:1mm}
+    .sec-num{font-size:14pt}
+    .sec-title{font-size:15pt}
+    .sec-blurb{font-size:9.5pt;margin-top:1.5mm;max-width:none}
+    .rule{margin:4mm 0}
+    .grid-2{grid-template-columns:1fr 1fr;gap:4mm 10mm}
+    .field{gap:1.2mm}
+    .lab{font-size:7.5pt}
+    input[type=text],textarea,select{display:none}
+    .val{font-size:10.5pt;color:var(--ink);line-height:1.4;white-space:pre-wrap;min-height:5mm}
+    .val-long{color:var(--ink-2);border-left:2px solid var(--amber);padding-left:3mm;font-size:10.5pt}
+    .val:empty::before{content:"\2014";color:var(--pip)}
+    /* frameworks: print only the chosen chips */
+    .card{break-inside:avoid}
+    .chips{display:flex;flex-wrap:wrap;gap:2mm}
+    .chip{display:inline-flex;align-items:center;padding:1.3mm 3.2mm 1.3mm 2.4mm;border-radius:999px;gap:2mm;break-inside:avoid}
     .chip:not(:has(input:checked)){display:none}
-    .chips{grid-template-columns:1fr}
+    .chips:not(:has(input:checked))::after{content:"None selected";font-size:10.5pt;color:var(--ink-3)}
+    .box{width:3.4mm;height:3.4mm;border-radius:50%;margin-top:0}
+    .box::after{width:1.7mm;height:.9mm;margin-top:-.4mm}
+    .chip-name{font-size:9.5pt;font-weight:600}
+    .chip-desc{display:none}
+
+    /* ---- pages 2-10: one domain per page ---- */
+    .sec-domains{break-before:page;padding-top:14mm}
+    .sec-domains .sec-blurb{display:none}
+    /* each domain carries the page's top and bottom padding; clone keeps both on
+       every fragment if a long note ever forces a split */
+    .domain{border:none;border-radius:0;padding:11mm 0 11mm;margin:0;break-inside:avoid;background:none;
+      -webkit-box-decoration-break:clone;box-decoration-break:clone}
+    .domain + .domain{break-before:page}
+    #domains .domain:first-child{padding-top:6mm}
+    .d-top{gap:4mm;align-items:baseline}
+    .d-num{font-size:15pt}
+    .d-name{font-size:17pt}
+    .pg-tag{margin-left:auto;font-family:var(--font-mono);font-size:7.5pt;letter-spacing:.06em;color:var(--ink-3);white-space:nowrap}
+    .d-blurb{font-size:11pt;margin-top:2mm;max-width:none}
+    .caps{margin-top:6.5mm;background:#fff;border:1px solid var(--border);border-radius:2mm;padding:0 5mm 1.5mm}
+    .cap-head{padding:4mm 0 3mm}
+    .cap-count{display:none}
+    .cap-row{grid-template-columns:1fr auto;gap:6mm;padding:3.8mm 0;border-top:1px solid var(--hairline);align-items:center}
+    .cap-text{font-size:11pt;line-height:1.45}
+    .seg{display:flex;border:none;background:none;border-radius:0;overflow:visible}
+    .seg label{cursor:default}
+    .seg label + label{border-left:none}
+    .seg label:not(:has(input:checked)){display:none}
+    .seg .s{padding:1.5mm 3.5mm;font-size:8.5pt;letter-spacing:.06em;border-radius:1.5mm;border:1px solid transparent}
+    .cap-row:not(:has(input:checked)) .seg::after{content:"not answered";font-family:var(--font-mono);font-size:8pt;letter-spacing:.06em;color:var(--ink-3);padding:1.5mm 0}
+    /* level ladder: all four descriptors print, the chosen one is marked */
+    .overall{margin-top:8mm;gap:1.2mm}
+    .ladder{margin-top:3.5mm;grid-template-columns:repeat(4,minmax(0,1fr));gap:3mm}
+    .ladder:has(.lvl[data-lv="x"] input:checked){grid-template-columns:repeat(5,minmax(0,1fr))}
+    .lvl{padding:4mm 4mm 4.5mm;gap:2.2mm;border-radius:2mm;cursor:default;break-inside:avoid}
+    .lvl[data-lv="x"]:not(:has(input:checked)){display:none}
+    .lvl:not(:has(input:checked)){border-color:var(--hairline)}
+    .lvl:not(:has(input:checked)) .lvl-name{color:var(--ink-3);font-weight:500}
+    .lvl:has(input:checked){border-width:1.5px}
+    .lvl:has(input:checked) .lvl-score::after{content:"\00A0\00B7\00A0selected";color:var(--ink);font-weight:600}
+    .pips i{height:1.5mm;border-radius:1mm}
+    .lvl-name{font-size:10.5pt}
+    .lvl-score{font-size:7pt}
+    .lvl-desc{font-size:9pt;line-height:1.4}
+    .notes{margin-top:8mm;gap:2.2mm}
+
+    /* ---- last page: D + disclaimer ---- */
+    .sec-priorities{break-before:page;padding:14mm 0 10mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+    footer.disc{padding:9mm 0 14mm}
+    footer.disc p{font-size:8pt;max-width:none}
+    footer.disc .akey{font-family:var(--font-mono);font-size:7pt;font-style:normal;color:var(--ink-3);margin-top:4mm;letter-spacing:.02em}
     a[href]::after{content:""}
   }
 </style>
@@ -255,7 +325,7 @@
 <main>
 
 <!-- =============== INTRO =============== -->
-<section class="section">
+<section class="section intro">
   <div class="wrap">
     <div class="card">
       <h2 class="sec-title">How this works</h2>
@@ -347,7 +417,8 @@
       <div class="rule"></div>
 
       <div class="field" style="margin-bottom:22px">
-        <span class="lab">Select all that apply</span>
+        <span class="lab screen-only">Select all that apply</span>
+        <span class="lab print-only">Frameworks in scope</span>
       </div>
       <div class="chips" id="fw"></div>
 
@@ -381,7 +452,7 @@
 </section>
 
 <!-- =============== C: DOMAINS =============== -->
-<section class="section">
+<section class="section sec-domains">
   <div class="wrap">
     <div class="sec-head"><span class="sec-num">C</span><h2 class="sec-title">The nine domains</h2></div>
     <p class="sec-blurb" style="margin-bottom:32px">Tap an answer for each capability statement — <strong>Yes</strong> means it's true in practice, not just on paper. Then choose the overall description closest to your organisation today. The overall choice is what produces the score; the statements are there to guide it and to give us specifics.</p>
@@ -390,7 +461,7 @@
 </section>
 
 <!-- =============== D: PRIORITIES =============== -->
-<section class="section">
+<section class="section sec-priorities">
   <div class="wrap">
     <div class="card">
       <div class="sec-head"><span class="sec-num">D</span><h2 class="sec-title">Your priorities</h2></div>
@@ -443,6 +514,7 @@
 <footer class="disc">
   <div class="wrap">
     <p>This questionnaire supports a directional assessment based on self-reported information — it is not a formal security audit, penetration test, or compliance certification. Framework references indicate control-level relevance, not conformance.</p>
+    <p class="print-only akey" id="akey"></p>
   </div>
 </footer>
 
@@ -644,7 +716,8 @@ var SEGCLASS={"Yes":"s-yes","Partly":"s-partly","No":"s-no","Not sure":"s-unsure
         '<span class="lvl-desc">You don\u2019t have visibility into this, or it varies too much to answer. We\u2019ll cover it on the call.</span></label>';
 
     var art=el('<article class="domain" id="d-'+d.id+'">'+
-      '<div class="d-top"><span class="d-num">'+d.n+'</span><h3 class="d-name">'+esc(d.name)+'</h3></div>'+
+      '<div class="d-top"><span class="d-num">'+d.n+'</span><h3 class="d-name">'+esc(d.name)+'</h3>'+
+      '<span class="print-only pg-tag"></span></div>'+
       '<p class="d-blurb">'+esc(d.blurb)+'</p>'+
       '<div class="caps"><div class="cap-head"><span class="eyebrow">Capability check</span>'+
       '<span class="cap-count" id="cc-'+d.id+'">0 of '+d.caps.length+' answered</span></div>'+rows+'</div>'+
@@ -653,7 +726,7 @@ var SEGCLASS={"Yes":"s-yes","Partly":"s-partly","No":"s-no","Not sure":"s-unsure
       '<div class="ladder">'+lv+'</div>'+
       '<div class="notes"><label class="lab" for="n-'+d.id+'">Notes — anything the buttons couldn\u2019t capture?</label>'+
       '<textarea id="n-'+d.id+'" placeholder="'+esc(d.ph)+'"></textarea>'+
-      '<div class="print-only" id="p-'+d.id+'"></div></div>'+
+      '<div class="print-only val val-long" id="p-'+d.id+'"></div></div>'+
       '</article>');
 
     /* capability answers */
@@ -694,16 +767,47 @@ function capCount(d){
   document.getElementById('cc-'+d.id).textContent=c+' of '+d.caps.length+' answered';
 }
 
-/* --- meta fields --- */
+/* --- meta fields: every control gets a print mirror so long values wrap
+       instead of being clipped inside an input box --- */
 document.querySelectorAll('[data-meta]').forEach(function(inp){
-  inp.addEventListener('input',function(){ state.meta[this.dataset.meta]=this.value; });
-  inp.addEventListener('change',function(){ state.meta[this.dataset.meta]=this.value; });
-  if(inp.tagName==='TEXTAREA'){
-    var mirror=el('<div class="print-only"></div>');
-    inp.after(mirror);
-    inp.addEventListener('input',function(){ mirror.textContent=this.value; });
-  }
+  var mirror=el('<div class="print-only val'+(inp.tagName==='TEXTAREA'?' val-long':'')+'"></div>');
+  inp.after(mirror);
+  inp._sync=function(){ state.meta[inp.dataset.meta]=inp.value; mirror.textContent=inp.value; };
+  inp.addEventListener('input',inp._sync);
+  inp.addEventListener('change',inp._sync);
 });
+
+/* --- DOM is the source of truth. Browsers restore form state on reload without
+       firing change events, which used to leave the counters, the export and the
+       print view out of step with what was visibly selected. --- */
+function syncFromDOM(){
+  document.querySelectorAll('[data-meta]').forEach(function(inp){ inp._sync(); });
+  state.frameworks=[];
+  document.querySelectorAll('#fw input').forEach(function(cb){ if(cb.checked) state.frameworks.push(cb.value); });
+  DOMAINS.forEach(function(d){
+    var art=document.getElementById('d-'+d.id), s={};
+    var caps={}, n=0;
+    d.caps.forEach(function(_,i){
+      var r=art.querySelector('input[name="cap-'+d.id+'-'+i+'"]:checked');
+      if(r){ caps[i]=r.value; n++; }
+    });
+    if(n) s.caps=caps;
+    var lr=art.querySelector('input[name="'+d.id+'"]:checked');
+    if(lr){
+      s.level = lr.value==='unsure' ? 'Not sure' : LEVELS[+lr.value];
+      s.score = lr.value==='unsure' ? '' : +lr.value;
+    }
+    var notes=document.getElementById('n-'+d.id).value;
+    if(notes) s.notes=notes;
+    document.getElementById('p-'+d.id).textContent=notes;
+    art.classList.toggle('done',!!lr);
+    if(Object.keys(s).length) state.domains[d.id]=s; else delete state.domains[d.id];
+    capCount(d);
+  });
+  progress();
+}
+window.addEventListener('pageshow',syncFromDOM);
+window.addEventListener('load',syncFromDOM);
 
 /* --- progress --- */
 function answered(){ return DOMAINS.filter(function(d){return state.domains[d.id]&&state.domains[d.id].level;}).length; }
@@ -809,13 +913,13 @@ function copyText(txt){
 }
 
 document.getElementById('b-copy').addEventListener('click',function(){
-  checkComplete(); copyText(buildText());
+  syncFromDOM(); checkComplete(); copyText(buildText());
 });
 
 document.getElementById('b-download').addEventListener('click',function(){
-  checkComplete();
+  syncFromDOM(); checkComplete();
   var org=(state.meta['Organisation']||'assessment').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
-  var payload={version:'1.4.0', kind:'cloudsmith-supply-chain-self-assessment',
+  var payload={version:'1.5.0', kind:'cloudsmith-supply-chain-self-assessment',
                exported:new Date().toISOString(), meta:state.meta,
                frameworks:state.frameworks, domains:state.domains,
                capabilities:DOMAINS.map(function(d){
@@ -834,7 +938,29 @@ document.getElementById('b-download').addEventListener('click',function(){
   toast('File downloaded \u2014 attach it to your reply');
 });
 
-document.getElementById('b-print').addEventListener('click',function(){ window.print(); });
+/* ---------- print / save as PDF ---------- */
+function answerKey(){
+  var code={"Yes":"Y","Partly":"P","No":"N","Not sure":"?"};
+  var parts=DOMAINS.map(function(d){
+    var s=state.domains[d.id]||{}, caps=s.caps||{};
+    var lv = s.level==='Not sure' ? '?' : ((s.score===0||s.score) ? s.score : '-');
+    return d.n+':'+lv+'/'+d.caps.map(function(_,i){ return caps[i] ? code[caps[i]] : '-'; }).join('');
+  });
+  return 'Answer key (Cloudsmith intake) v1.5 \u00B7 '+parts.join(' \u00B7 ')+
+         ' \u00B7 frameworks: '+(state.frameworks.length ? state.frameworks.join(', ') : 'none');
+}
+function preparePrint(){
+  syncFromDOM();
+  var tag=[state.meta['Organisation'],state.meta['Date completed']].filter(Boolean).join(' \u00B7 ');
+  document.querySelectorAll('.pg-tag').forEach(function(t){ t.textContent=tag; });
+  document.getElementById('akey').textContent=answerKey();
+}
+window.addEventListener('beforeprint',preparePrint);
+document.getElementById('b-print').addEventListener('click',function(){
+  preparePrint();
+  toast('In the print dialog choose \u201CSave as PDF\u201D \u2014 and untick \u201CHeaders and footers\u201D if your browser shows the option');
+  setTimeout(function(){ window.print(); },150);
+});
 
 /* ---------- load a saved / handed-off file ---------- */
 function hasAnswers(){
@@ -862,6 +988,15 @@ document.getElementById('f-file').addEventListener('change',function(e){
         toast('That does not look like a saved assessment file'); return;
       }
       state.meta=data.meta||{}; state.frameworks=data.frameworks||[]; state.domains=data.domains||{};
+      /* the ordered capabilities array is unambiguous; prefer it over caps keys when present */
+      (data.capabilities||[]).forEach(function(c){
+        var d=DOMAINS.filter(function(x){return x.name===c.domain;})[0];
+        if(!d||!c.items) return;
+        var caps={};
+        c.items.forEach(function(it,i){ if(it&&it.answer) caps[i]=it.answer; });
+        state.domains[d.id]=state.domains[d.id]||{};
+        state.domains[d.id].caps=caps;
+      });
 
       document.querySelectorAll('[data-meta]').forEach(function(inp){
         inp.value = (state.meta[inp.dataset.meta]!==undefined) ? state.meta[inp.dataset.meta] : '';
